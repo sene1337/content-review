@@ -12,6 +12,23 @@ Any URL + one of: `review`, `analyze`, `worth my time?`, `should I watch`, `shou
 
 ## Workflow
 
+### Step 0: Pre-Flight Checks ⭐
+Before any extraction, verify your environment:
+
+1. **Check tool availability:**
+   - `yt-dlp --version` → if missing, skip to web-based extraction
+   - `whisper --help` → if missing, skip to web-based extraction
+   - Verify `web_search` works (not rate-limited)
+2. **Detect environment constraints:**
+   - Datacenter IPs get blocked by YouTube (yt-dlp will fail) — if a prior yt-dlp attempt returned 403/HTTP error, don't retry
+   - If running in a sandbox without local tools, go straight to Tier 1 (web-based) extraction
+3. **Set extraction strategy BEFORE starting:**
+   - Tools available + residential IP → full pipeline (yt-dlp + whisper)
+   - Tools missing OR datacenter → web-first extraction (search for transcripts/summaries)
+   - No results from web → ask user for help
+
+**If pre-flight fails, skip directly to the appropriate fallback tier. Do not attempt methods that will fail.**
+
 ### Step 1: Detect Content Type
 From the URL, determine:
 - **YouTube video** → needs transcription
@@ -24,22 +41,37 @@ From the URL, determine:
 
 For videos <60 minutes, proceed automatically.
 
-### Step 2: Extract Content (Sub-Agent)
-Spawn a sub-agent with explicit execution instructions. See [references/sub-agent-prompt.md](references/sub-agent-prompt.md) for the spawn template.
+### Step 2: Extract Content
 
-**Critical — Output Verification:**
-After the sub-agent completes, verify the output file:
-1. Check that the file exists at the expected path
+**Use the fallback hierarchy — stop at the first tier that works:**
+
+**Tier 1: Lightweight web extraction (~500 tokens)** ⭐ Try first
+- YouTube: `web_search "[video title] transcript"` or `web_search "[video-id] transcript"`
+- YouTube: `web_fetch` on known transcript services (e.g., `kome.ai/api/transcript?url=[URL]`)
+- YouTube: oEmbed for metadata (`https://www.youtube.com/oembed?url=[URL]&format=json`)
+- Articles: `web_fetch` with markdown extraction
+- Tweets: `api.fxtwitter.com/[user]/status/[id]`
+- If sufficient content extracted → skip to Step 3
+
+**Tier 2: Sub-agent extraction (~5k tokens)** — Only if Tier 1 fails AND tools are available
+- Spawn sub-agent with explicit instructions (see [references/sub-agent-prompt.md](references/sub-agent-prompt.md))
+- **Critical: After spawning, WAIT for the sub-agent to complete. Do NOT attempt parallel extraction.**
+- Verify output file exists and has substantive content before proceeding
+
+**Tier 3: Ask user for help (~1k tokens)** — Last resort
+- "I couldn't extract this content automatically. Could you paste the transcript/key points, or should I work from the title and description only?"
+
+**Retry Limits (hard caps):**
+- `web_search`: max 2 attempts per URL
+- `web_fetch`: max 1 attempt per specific URL
+- `yt-dlp`: max 1 attempt (if blocked, it's blocked — don't retry)
+- Total retries across all methods: abort if >5
+- If a method returns an error, log it and move to next tier — don't repeat
+
+**Output Verification (after any extraction):**
+1. Check that the output file exists at the expected path
 2. Check that it has substantive content (not empty, not just a plan/outline)
-3. If verification fails, retry extraction with a direct approach (no sub-agent) or report the failure clearly
-
-```
-# Verification pattern (do this after sub-agent reports done):
-read the output file
-if file doesn't exist or is empty or is just an outline:
-  → retry with web_search + web_fetch yourself (no sub-agent)
-  → or clearly tell the user extraction failed and why
-```
+3. If verification fails after Tier 2, fall through to Tier 3 — don't retry the same approach
 
 ### Step 3: Review Against Frameworks
 After verified extraction, review the content against:
@@ -84,25 +116,11 @@ The review file should contain:
 - Full extracted content or detailed summary
 - Actions and insights (separated)
 
-## Content Extraction Methods
+## Known Limitations
 
-### YouTube Videos
-1. Try `web_search` for existing transcripts: `"[video-id] transcript"`
-2. Try transcript services via `web_fetch`
-3. Fall back to `yt-dlp` + Whisper (use `--model base` — it's fast and reliable)
-4. Supplement with web research about the video's content
-
-### Articles
-1. `web_fetch` with markdown extraction
-2. For X/Twitter articles: use `api.fxtwitter.com` which returns full content in JSON
-
-### Tweet Threads
-1. `api.fxtwitter.com/[user]/status/[id]` for individual tweets
-2. Follow reply chains for threads
-
-### Podcasts
-1. Search for existing transcripts first (many podcasts publish them)
-2. Fall back to audio download + Whisper if available
+- **YouTube bot detection:** YouTube blocks yt-dlp from datacenter/cloud IPs. If you're running on a VPS or in a sandbox, yt-dlp will likely fail with 403 errors. Use web-based transcript extraction (Tier 1) instead.
+- **Rate limiting:** web_search providers may rate-limit after repeated queries. Space out searches or reduce query count.
+- **Long videos (>2hr):** Whisper transcription is CPU-intensive. For very long content, prefer searching for existing transcripts.
 
 ## Notes
 - Keep verdicts concise — mobile-friendly formatting (no tables, use bullet lists)
