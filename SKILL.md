@@ -43,9 +43,21 @@ For videos <60 minutes, proceed automatically.
 
 ### Step 2: Extract Content
 
+**⚠️ Context Window Protection Rule:**
+The purpose of this skill is to keep the main agent's context clean. Heavy extraction work MUST happen in a sub-agent, not in the main session.
+
+- **Tier 1 (web-based, <3k tokens):** OK to run in main agent — lightweight metadata and search results
+- **Tier 2 (transcript/content extraction, 5k+ tokens):** MUST spawn a sub-agent. No exceptions. The main agent's job is to orchestrate and review, not to do heavy extraction.
+- **Model routing:** Sub-agents should use a cheaper model (e.g., Sonnet) for extraction work. The main agent handles judgment (verdict, relevance, actions) on its primary model.
+
+**If Tier 1 produces enough content for a solid review → proceed to Step 3.**
+**If Tier 1 is insufficient → spawn a sub-agent for Tier 2. Do NOT do Tier 2 work yourself.**
+
+---
+
 **Use the fallback hierarchy — stop at the first tier that works:**
 
-**Tier 1: Lightweight web extraction (~500 tokens)** ⭐ Try first
+**Tier 1: Lightweight web extraction (~500-2.5k tokens)** ⭐ Try first, main agent
 - YouTube: `web_search "[video title] transcript"` or `web_search "[video-id] transcript"`
 - YouTube: `web_fetch` on known transcript services (e.g., `kome.ai/api/transcript?url=[URL]`)
 - YouTube: oEmbed for metadata (`https://www.youtube.com/oembed?url=[URL]&format=json`)
@@ -53,10 +65,11 @@ For videos <60 minutes, proceed automatically.
 - Tweets: `api.fxtwitter.com/[user]/status/[id]`
 - If sufficient content extracted → skip to Step 3
 
-**Tier 2: Sub-agent extraction (~5k tokens)** — Only if Tier 1 fails AND tools are available
-- Spawn sub-agent with explicit instructions (see [references/sub-agent-prompt.md](references/sub-agent-prompt.md))
+**Tier 2: Sub-agent extraction (~5k tokens)** — ALWAYS a sub-agent, NEVER main agent
+- Spawn sub-agent (use cheaper model like Sonnet) with explicit instructions (see [references/sub-agent-prompt.md](references/sub-agent-prompt.md))
 - **Critical: After spawning, WAIT for the sub-agent to complete. Do NOT attempt parallel extraction.**
 - Verify output file exists and has substantive content before proceeding
+- Sub-agent session is disposable — its context gets thrown away after extraction, keeping your main context clean
 
 **Tier 3: Ask user for help (~1k tokens)** — Last resort
 - "I couldn't extract this content automatically. Could you paste the transcript/key points, or should I work from the title and description only?"
