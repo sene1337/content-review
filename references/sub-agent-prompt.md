@@ -2,6 +2,11 @@
 
 Use this template when spawning a sub-agent for content extraction. Customize the variables in brackets.
 
+## Important: Use Absolute Paths
+Always use the full absolute path to your workspace (e.g., `/Users/yourname/.openclaw/workspace/`), NOT relative paths like `/workspace/`. Sub-agents may resolve paths differently.
+
+## Template
+
 ```
 You must DO this work yourself — do NOT spawn sub-agents or just plan. Execute directly.
 
@@ -13,7 +18,7 @@ You must DO this work yourself — do NOT spawn sub-agents or just plan. Execute
 [For YouTube:]
 1. Use web_search for "[VIDEO_ID] transcript" to find existing transcripts
 2. Try web_fetch on transcript services
-3. If no transcript found, use yt-dlp + whisper (check for venv at /workspace first):
+3. If no transcript found, use yt-dlp + whisper:
    - yt-dlp -x --audio-format wav -o "/tmp/audio.wav" "[URL]"
    - whisper /tmp/audio.wav --model base --output_format txt
 4. Supplement with web_search for summaries and reviews of this specific content
@@ -26,7 +31,9 @@ You must DO this work yourself — do NOT spawn sub-agents or just plan. Execute
 1. Use api.fxtwitter.com to get each tweet in the thread
 2. Follow reply chains
 
-**Output:** Write to /workspace/docs/reviews/[SLUG].md
+**Output:** Write to [ABSOLUTE_WORKSPACE_PATH]/docs/reviews/[SLUG].md
+
+Create the docs/reviews/ directory if it doesn't exist.
 
 **Document Structure:**
 - Source info (title, author, URL, date, length)
@@ -40,8 +47,9 @@ You must DO this work yourself — do NOT spawn sub-agents or just plan. Execute
 - Do NOT report complete without creating the output file
 - Do NOT just describe what you would do — actually do it
 - Include actual content, not summaries of what the content "probably" covers
+- Use absolute paths for ALL file operations
 
-**Definition of Done:** File exists at the specified path with substantive extracted content.
+**Definition of Done:** File exists at the specified path with substantive extracted content (not an outline or plan).
 ```
 
 ## Content Type Detection
