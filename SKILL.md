@@ -1,11 +1,16 @@
 ---
-name: content-review
-description: Analyze content (YouTube videos, articles, tweet threads, podcasts) and deliver a watch/read/skip verdict with extracted insights. Trigger when user shares a URL with keywords like "review", "analyze", "worth my time", "should I watch", "should I read", or "review this". Also triggers on "content review" or just a URL followed by a question mark.
+name: content-claw
+description: Analyze content (YouTube videos, articles, tweet threads, podcasts) and deliver a watch/read/skip verdict with extracted insights. Trigger when user shares a URL with keywords like "review", "analyze", "worth my time", "should I watch", "should I read", or "review this". Also triggers on "content review", "content claw", or just a URL followed by a question mark.
 ---
 
-# Content Review
+# Content Claw 🦞
 
 Analyze external content against the user's goals, frameworks, and time value. Extract the insights so they don't have to consume the full content unless it's truly worth their time.
+
+**Folder structure:**
+- `docs/content-claw/caught/` — 📖 Read and 🎬 Watch verdicts. The keepers.
+- `docs/content-claw/released/skim/` — 👀 Skim verdicts. Monthly batch review, then purged.
+- `docs/content-claw/released/skip/` — ⏭️ Skip verdicts. Auto-purge after 14 days.
 
 ## Trigger Words
 Any URL + one of: `review`, `analyze`, `worth my time?`, `should I watch`, `should I read`, `evaluate`, `?`
@@ -28,6 +33,15 @@ Before any extraction, verify your environment:
    - No results from web → ask user for help
 
 **If pre-flight fails, skip directly to the appropriate fallback tier. Do not attempt methods that will fail.**
+
+### Step 0.5: Sanitize URLs 🧹
+Before fetching or searching ANY shared URL, strip tracking parameters:
+- **Twitter/X:** Remove `?s=`, `&s=`, `?t=`, `&t=`, `?ref_src=`, `&ref_src=`
+- **YouTube:** Remove `&si=`, `?si=`, `&feature=`, `?feature=`, `&pp=`
+- **Universal:** Remove `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `utm_id`, `fbclid`, `gclid`, `igshid`, `ref`, `mc_cid`, `mc_eid`
+- **Rule:** Strip everything after `?` or `&` that matches these patterns. Keep essential params (e.g., YouTube `v=`, `t=` for timestamps, `list=` for playlists).
+
+Example: `https://youtube.com/watch?v=abc123&si=tracking_garbage&t=120` → `https://youtube.com/watch?v=abc123&t=120`
 
 ### Step 1: Detect Content Type
 From the URL, determine:
@@ -116,18 +130,60 @@ Also note:
 - Source quality assessment (credible? experienced? selling something?)
 
 ### Step 5: Save Review
-Save the review to a sensible location:
 
-1. **If `docs/reviews/` exists** → save there as `[descriptive-slug].md`
-2. **If `docs/` exists but no `reviews/`** → create `docs/reviews/` and save there
-3. **If no `docs/` directory** → create `docs/reviews/` and save there
-4. **Never overwrite existing files** — append a number if slug already exists
+**Source block (required at top of every review file):**
 
-The review file should contain:
-- Source info (title, author, URL, date, length)
+```markdown
+## Source
+- **Title:** [Content title]
+- **Author:** [Creator name] (@handle if applicable)
+- **URL:** [Clean URL — tracking params stripped]
+- **Date:** [Publication date]
+- **Length:** [Duration or word count]
+- **Shared by:** [Who shared it] via [channel], [date]
+- **Context:** [1-2 sentences: what was happening when the link was shared — what project, conversation, or train of thought prompted it. This is for future memory recall.]
+```
+
+**Filing rules by verdict:**
+
+| Verdict | Destination | Retention |
+|---|---|---|
+| 📖 **Read** | `docs/content-claw/caught/[slug].md` | Permanent |
+| 🎬 **Watch** | `docs/content-claw/caught/[slug].md` | Permanent |
+| 👀 **Skim** | `docs/content-claw/released/skim/[slug].md` | Monthly batch review |
+| ⏭️ **Skip** | `docs/content-claw/released/skip/[slug].md` | Auto-purge after 14 days |
+
+- Create directories as needed
+- Never overwrite existing files — append a number if slug already exists
+
+**Review file contents:**
+- Source block (as above)
 - Verdict and reasoning
 - Full extracted content or detailed summary
 - Actions and insights (separated)
+
+### Step 6: Released Folder Maintenance 🧹
+
+**Auto-purge (agent-driven, no human input needed):**
+- Files in `released/skip/` older than 14 days → delete automatically during heartbeats or periodic maintenance
+- No confirmation needed. Skips were definitively not worth it.
+
+**Monthly batch review (low-friction human decision):**
+- Once per month, scan `released/skim/` for accumulated reviews
+- Surface a numbered summary to the user:
+
+> 🦞 **Content Claw — Monthly Purge**
+> [N] skims from [month]. Promote or release?
+>
+> 1. "Article title" — one-line context reminder
+> 2. "Article title" — one-line context reminder
+> ...
+>
+> Reply with numbers to promote to `caught/`, or "clear all"
+
+- Promoted files move to `docs/content-claw/caught/`
+- Remaining files get deleted
+- Track last purge date to avoid double-prompting
 
 ## Known Limitations
 

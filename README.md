@@ -1,4 +1,4 @@
-# content-review
+# Content Claw 🦞
 
 An [OpenClaw](https://openclaw.ai) skill that saves you hours of content consumption every week.
 
@@ -8,6 +8,7 @@ Send your agent a link — YouTube video, article, tweet thread, podcast — wit
 2. **Cross-reference** it against your goals, existing knowledge, and frameworks
 3. **Deliver a verdict**: 🎬 Watch, 📖 Read, 👀 Skim, or ⏭️ Skip
 4. **Extract key insights** either way — so you get the value regardless
+5. **File it** — winners go to `caught/`, the rest get `released/` with auto-purge
 
 ## Why?
 
@@ -20,6 +21,7 @@ This skill lets your AI agent be the first filter. It extracts the value so you 
 Any URL combined with:
 - `review` / `analyze` / `evaluate`
 - `worth my time?` / `should I watch?` / `should I read?`
+- `content claw`
 - Just a URL followed by `?`
 
 ## How It Works
@@ -37,7 +39,7 @@ We already have this framework. But here's the one new insight:
 💡 Insights:
 - Author reframes delegation as "investment" not "handoff" — useful mental model
 
-Saved to docs/reviews/xyz-delegation-framework.md
+Filed → released/skip/xyz-delegation-framework.md (auto-purge in 14 days)
 ```
 
 ## Verdict Scale
@@ -47,12 +49,28 @@ Saved to docs/reviews/xyz-delegation-framework.md
 - 📖 **Read** — Worth reading the summary. Key frameworks extracted.
 - 🎬 **Watch** — Visual/demo content that loses value in text. Worth the time.
 
+## Folder Structure: Caught & Released
+
+```
+docs/content-claw/
+├── caught/              ← 📖 Read and 🎬 Watch verdicts. Permanent keepers.
+└── released/
+    ├── skim/            ← 👀 Monthly batch review, then purged.
+    └── skip/            ← ⏭️ Auto-purge after 14 days. Zero maintenance.
+```
+
+**Caught** = content worth your time. Your curated knowledge shelf.
+
+**Released** = value extracted, original not worth keeping. Skips auto-delete. Skims get a monthly one-line summary — reply with numbers to promote to `caught/` or "clear all."
+
 ## Features
 
+- **🧹 URL sanitization** — Strips tracking params (utm_*, fbclid, Twitter `s`/`t`, YouTube `si`) before fetching
+- **📎 Rich source context** — Every review includes who shared it, when, and what you were working on (for future memory recall)
+- **🗑️ Auto-purge** — Skip reviews auto-delete after 14 days. Skim reviews get monthly batch review.
 - **Duration-aware** — Warns before transcribing 60+ minute videos, offers alternatives
 - **Output verification** — Validates sub-agent actually extracted content (not just planned to)
 - **Actions vs Insights** — Separates actionable items (📌) from interesting-but-passive info (💡)
-- **Adaptive file structure** — Detects your existing doc organization and saves reviews accordingly
 - **Multi-format** — YouTube, articles, tweets, podcasts, Substack, Medium
 
 ## Content Types Supported
@@ -85,6 +103,34 @@ content-review/
 ├── LICENSE                         # MIT
 └── README.md                       # You're reading it
 ```
+
+## Changelog
+
+### v1.4 — Content Claw
+- **Renamed** from "content-review" to "Content Claw" 🦞
+- **Caught/Released folder structure** — Read/Watch → `caught/`, Skim → `released/skim/`, Skip → `released/skip/`
+- **URL sanitization** (Step 0.5) — Strips tracking params from Twitter, YouTube, and universal trackers before fetching
+- **Rich source context** — Every review includes sharer, channel, date, and conversation context for memory recall
+- **Auto-purge skips** — `released/skip/` files auto-delete after 14 days
+- **Monthly skim review** — Agent surfaces numbered list of skims for promote-or-purge decision
+
+### v1.3
+- **Context window protection rule** — Tier 2+ extraction MUST use sub-agents, never main agent
+- **Model routing** — Sub-agents use cheaper models (Sonnet) for extraction; main agent handles judgment
+
+### v1.2
+- Pre-flight checks, tiered fallback hierarchy, retry limits
+- Output verification with retry
+- 92% token reduction vs v1.1 (Tier 1 only: 2.5k tokens vs 32k)
+
+### v1.1
+- Sub-agent output verification with retry
+- 60+ minute duration check
+- Generic doc structure (works with any agent's setup)
+- Action vs insight separation
+
+### v1.0
+- Initial release. URL → extraction → verdict → review file.
 
 ## Built By
 
