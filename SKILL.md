@@ -12,10 +12,28 @@ Analyze external content against the user's goals, frameworks, and time value. E
 - `docs/content-claw/released/skim/` — 👀 Skim verdicts. Monthly batch review, then purged.
 - `docs/content-claw/released/skip/` — ⏭️ Skip verdicts. Auto-purge after 14 days.
 
+**File naming scheme:** `{category}--{source}--{title-slug}.md`
+- **Category:** `ai-agents`, `bitcoin`, `health`, `media`, `business`, `tech`, `finance`, `culture`, `ops` (extend as needed)
+- **Source type:** `article`, `video`, `podcast`, `thread`, `paper`
+- **Title slug:** Short descriptive slug using hyphens
+- **Separator:** Double-dash `--` (doesn't conflict with hyphens in slugs)
+- Example: `ai-agents--article--clawvault-memory-architecture.md`
+
+At a glance you can see category, format, and topic without opening the file.
+
 ## Trigger Words
 Any URL + one of: `review`, `analyze`, `worth my time?`, `should I watch`, `should I read`, `evaluate`, `?`
 
 ## Workflow
+
+### Step -1: Duplicate Check ⭐⭐
+**Before ANY extraction work**, check if this URL has already been reviewed:
+1. `grep -rl "<cleaned-URL>" docs/content-claw/` (search all caught + released folders)
+2. Also check partial URL matches (e.g., tweet ID, YouTube video ID) in case the URL format differs
+3. **If found:** Tell the user it's already been reviewed, show the file path and verdict. Ask if they want a re-review or update.
+4. **If not found:** Proceed to Step 0.
+
+This prevents duplicate files and wasted extraction work. No exceptions.
 
 ### Step 0: Pre-Flight Checks ⭐
 Before any extraction, verify your environment:
@@ -148,11 +166,12 @@ Also note:
 
 | Verdict | Destination | Retention |
 |---|---|---|
-| 📖 **Read** | `docs/content-claw/caught/[slug].md` | Permanent |
-| 🎬 **Watch** | `docs/content-claw/caught/[slug].md` | Permanent |
-| 👀 **Skim** | `docs/content-claw/released/skim/[slug].md` | Monthly batch review |
-| ⏭️ **Skip** | `docs/content-claw/released/skip/[slug].md` | Auto-purge after 14 days |
+| 📖 **Read** | `docs/content-claw/caught/{cat}--{src}--{slug}.md` | Permanent |
+| 🎬 **Watch** | `docs/content-claw/caught/{cat}--{src}--{slug}.md` | Permanent |
+| 👀 **Skim** | `docs/content-claw/released/skim/{cat}--{src}--{slug}.md` | Monthly batch review |
+| ⏭️ **Skip** | `docs/content-claw/released/skip/{cat}--{src}--{slug}.md` | Auto-purge after 14 days |
 
+- Naming: `{category}--{source-type}--{title-slug}.md` (see top of file for categories/sources)
 - Create directories as needed
 - Never overwrite existing files — append a number if slug already exists
 
