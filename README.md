@@ -83,20 +83,20 @@ docs/content-claw/
 ## Install
 
 ```bash
-git clone https://github.com/sene1337/content-review.git
+git clone https://github.com/sene1337/content-claw.git
 
 # Copy to your OpenClaw skills directory
-cp -r content-review /path/to/your/openclaw/skills/
+cp -r content-claw /path/to/your/openclaw/skills/
 ```
 
-Or just drop the `content-review/` folder into your skills directory and restart OpenClaw.
+Or just drop the `content-claw/` folder into your skills directory and restart OpenClaw.
 
 The skill adapts to your setup — it reviews content against whatever goals, knowledge base, and doc structure your agent already has. The more context your agent has about what you already know, the better the verdicts.
 
 ## Files
 
 ```
-content-review/
+content-claw/
 ├── SKILL.md                        # Skill definition (agent reads this)
 ├── references/
 │   └── sub-agent-prompt.md         # Template for spawning extraction sub-agents
@@ -105,6 +105,11 @@ content-review/
 ```
 
 ## Changelog
+
+### v1.5
+- **File naming scheme** — `{category}--{source}--{title-slug}.md` for at-a-glance sorting (e.g., `ai-agents--article--clawvault-memory-architecture.md`)
+- **Duplicate check (Step -1)** — Searches all caught/released folders for existing reviews of the same URL before running extraction. Prevents duplicate files and wasted work.
+- **GitHub repo renamed** from `content-review` to `content-claw`
 
 ### v1.4 — Content Claw
 - **Renamed** from "content-review" to "Content Claw" 🦞
