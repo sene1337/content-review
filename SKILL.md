@@ -1,6 +1,6 @@
 ---
 name: content-claw
-description: Analyze content (YouTube videos, articles, tweet threads, podcasts) and deliver a watch/read/skip verdict with extracted insights. Trigger when user shares a URL with keywords like "review", "analyze", "worth my time", "should I watch", "should I read", or "review this". Also triggers on "content review", "content claw", or just a URL followed by a question mark.
+description: Analyze content (YouTube videos, articles, tweet threads, podcasts) and deliver a watch/read/skip verdict with extracted insights. Trigger when user shares a URL with keywords like "review", "analyze", "worth my time", "should I watch", "should I read", or "review this". Also triggers on "content review", "content claw", or just a URL followed by a question mark. Do NOT use for simple link sharing without review intent, bookmarking URLs for later, or when user just wants to open/visit a link.
 ---
 
 # Content Claw 🦞
@@ -21,9 +21,6 @@ Analyze external content against the user's goals, frameworks, and time value. E
 
 At a glance you can see category, format, and topic without opening the file.
 
-## Trigger Words
-Any URL + one of: `review`, `analyze`, `worth my time?`, `should I watch`, `should I read`, `evaluate`, `?`
-
 ## Workflow
 
 ### Step -1: Duplicate Check ⭐⭐
@@ -36,21 +33,7 @@ Any URL + one of: `review`, `analyze`, `worth my time?`, `should I watch`, `shou
 This prevents duplicate files and wasted extraction work. No exceptions.
 
 ### Step 0: Pre-Flight Checks ⭐
-Before any extraction, verify your environment:
-
-1. **Check tool availability:**
-   - `yt-dlp --version` → if missing, skip to web-based extraction
-   - `whisper --help` → if missing, skip to web-based extraction
-   - Verify `web_search` works (not rate-limited)
-2. **Detect environment constraints:**
-   - Datacenter IPs get blocked by YouTube (yt-dlp will fail) — if a prior yt-dlp attempt returned 403/HTTP error, don't retry
-   - If running in a sandbox without local tools, go straight to Tier 1 (web-based) extraction
-3. **Set extraction strategy BEFORE starting:**
-   - Tools available + residential IP → full pipeline (yt-dlp + whisper)
-   - Tools missing OR datacenter → web-first extraction (search for transcripts/summaries)
-   - No results from web → ask user for help
-
-**If pre-flight fails, skip directly to the appropriate fallback tier. Do not attempt methods that will fail.**
+Verify tools and set extraction strategy before starting. See [references/environment-setup.md](references/environment-setup.md) for full checklist.
 
 ### Step 0.5: Sanitize URLs 🧹
 Before fetching or searching ANY shared URL, strip tracking parameters:
